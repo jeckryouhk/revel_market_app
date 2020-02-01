@@ -4,12 +4,11 @@ import {
 } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack'
 
+import { SplashScreen } from './views/SplashScreen'
 import { Login } from './views/Login/Login'
 import { Home } from './views/Home/Home'
 import { NewsDetail } from './views/News/NewsDetail'
 import { ShopDetail } from './views/Shop/ShopDetail'
-
-
 
 const HomeNavigation = createStackNavigator({
   Home: { 
@@ -18,7 +17,7 @@ const HomeNavigation = createStackNavigator({
           header: null
       }
   },
-  NewsDetailTest: { 
+  NewsDetail: { 
       screen: NewsDetail,
       navigationOptions: {
           title: 'รายละเอียด',
@@ -53,15 +52,9 @@ const HomeNavigation = createStackNavigator({
   initialRouteParams: 'Home',
 });
 
-
-
-
-
-
-
-
-
 const Navigation = createSwitchNavigator({
+  SplashScreen: SplashScreen,
+  Login: Login,
   Home: HomeNavigation,
 })
 

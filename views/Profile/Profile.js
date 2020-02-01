@@ -1,10 +1,11 @@
 import React from 'react';
 import {
     Alert,
-    Image, 
-    StyleSheet, 
+    AsyncStorage,
+    Image,
+    StyleSheet,
     ScrollView,
-    Text, 
+    Text,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -31,94 +32,101 @@ export default class Profile extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ 
+        this.setState({
             loading: true,
             alert: '',
-        }, () => { 
-            user_model.getUserByUserCode('U0001').then((response) => {
-                if (response == false) {
-                    this.setState({
-                        loading: false,
-                        alert: 'network-failed',
-                    });
-                }else if (response.data.length == 0) {
-                    this.setState({
-                        loading: false,
-                        alert: 'not-found',
-                    });
-                }else{
-                    this.setState({ 
-                        loading: false,
-                        user_data: response.data[0], 
-                    });
-                }
+        }, () => {
+            AsyncStorage.getItem('user_data').then((user) => { return JSON.parse(user) }).then((user_data) => {
+                user_model.getUserByUserCode(user_data.user_code).then((response) => {
+                    if (response == false) {
+                        this.setState({
+                            loading: false,
+                            alert: 'network-failed',
+                        });
+                    } else if (response.data.length == 0) {
+                        this.setState({
+                            loading: false,
+                            alert: 'not-found',
+                        });
+                    } else {
+                        this.setState({
+                            loading: false,
+                            user_data: response.data[0],
+                        });
+                    }
+                })
             })
         })
     }
 
     _confirmLogout() {
-        Alert.alert('ออกจากระบบ', 'คุณต้องการออกจากระบบหรือไม่ ?', [{ text: 'OK', onPress: () => this._logOut() }, { text: 'cancel', }]);
+        Alert.alert('ออกจากระบบ', 
+        'คุณต้องการออกจากระบบหรือไม่ ?', 
+        [{ text: 'OK', onPress: () => this._logOut() }, 
+        { text: 'cancel', }]);
     }
 
     _logOut() {
-
+        AsyncStorage.removeItem('user_data').then(() => {
+            this.props.navigation.navigate('Login')
+        });
     }
 
-    render() { 
+    render() {
         var display_data = [];
 
         if (this.state.loading) {
-            display_data.push(<Loading/>);
-        }else{
+            display_data.push(<Loading />);
+        } else {
             if (this.state.alert == 'network-failed') {
-                display_data.push(<NetworkFailed/>);
-            }else if (this.state.alert == 'not-found') {
-                display_data.push(<NotFound/>);
-            }else{
+                display_data.push(<NetworkFailed />);
+            } else if (this.state.alert == 'not-found') {
+                display_data.push(<NotFound />);
+            } else {
                 display_data.push(
                     <View style={{ padding: 20, }}>
                         <View style={styles.profile_frame}>
-                            {this.state.user_data.user_image != '' ? 
-                            <Image source={{ uri: GOBALS.URL + this.state.user_data.user_image }} style={styles.profile_image}></Image>
-                            :
-                            <Image source={require('../../images/default-user.png')} style={styles.profile_image}></Image>
+                            {this.state.user_data.user_image != '' ?
+                                <Image source={{ uri: GOBALS.URL + this.state.user_data.user_image }} style={styles.profile_image}></Image>
+                                :
+                                <Image source={require('../../images/default-user.png')} style={styles.profile_image}></Image>
                             }
                         </View>
-                        <Text style={[ styles.text_font, { alignSelf: "center", fontSize: 22, marginBottom: 16, }]}>
+                        <Text style={[styles.text_font, { alignSelf: "center", fontSize: 22, marginBottom: 16, }]}>
                             {this.state.user_data.user_name + ' ' + this.state.user_data.user_lastname}
                         </Text>
-                        {this.state.user_data.user_address != '' ? 
-                        <View style={{ flexDirection: 'row', marginBottom: 8, }}>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Icon name="map-marker-outline" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                        {this.state.user_data.user_address != '' ?
+                            <View style={{ flexDirection: 'row', marginBottom: 8, }}>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Icon name="map-marker-outline" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                                </View>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Text style={[styles.text_font, { marginLeft: 8, }]}>{this.state.user_data.user_address}</Text>
+                                </View>
                             </View>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Text style={[ styles.text_font, { marginLeft: 8, } ]}>{this.state.user_data.user_address}</Text>
-                            </View>
-                        </View>
-                        : null 
+                            : null
                         }
-                        {this.state.user_data.user_tel != '' ? 
-                        <View style={{ flexDirection: 'row', marginBottom: 8, }}>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Icon name="phone" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                        {this.state.user_data.user_tel != '' ?
+                            <View style={{ flexDirection: 'row', marginBottom: 8, }}>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Icon name="phone" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                                </View>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Text style={[styles.text_font, { marginLeft: 8, }]}>{this.state.user_data.user_tel}</Text>
+                                </View>
                             </View>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Text style={[ styles.text_font, { marginLeft: 8, } ]}>{this.state.user_data.user_tel}</Text>
-                            </View>
-                        </View>
-                        : null 
+                            : null
                         }
-                        {this.state.user_data.user_email != '' ? 
-                        <View style={{ flexDirection: 'row', marginBottom: 8, }}>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Icon name="at" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                        {this.state.user_data.user_email != '' ?
+                            <View style={{ flexDirection: 'row', marginBottom: 8, }}>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Icon name="at" style={{ fontSize: 16, color: "#ff9900", marginTop: 3, }}></Icon>
+                                </View>
+                                <View style={{ flexDirection: 'column', }}>
+                                    <Text style={[styles.text_font, { marginLeft: 8, }]}>{this.state.user_data.user_email}</Text>
+                                </View>
                             </View>
-                            <View style={{ flexDirection: 'column', }}>
-                                <Text style={[ styles.text_font, { marginLeft: 8, } ]}>{this.state.user_data.user_email}</Text>
-                            </View>
-                        </View>
-                        : null 
+                            : null
                         }
                         <TouchableOpacity
                             style={{
@@ -130,7 +138,7 @@ export default class Profile extends React.Component {
                                 borderRadius: 30,
                             }}
                             onPress={() => this._confirmLogout()}>
-                            <Text style={[ styles.text_font, { alignSelf: 'center', color: '#000', }]}>
+                            <Text style={[styles.text_font, { alignSelf: 'center', color: '#000', }]}>
                                 ลงชื่อออก
                             </Text>
                         </TouchableOpacity>
@@ -148,23 +156,23 @@ export default class Profile extends React.Component {
 }
 
 const styles = StyleSheet.create({
-	text_font: {
-		fontSize: 16,
+    text_font: {
+        fontSize: 16,
         color: '#fff',
     },
     profile_frame: {
-        width: 120, 
+        width: 120,
         height: 120,
         padding: 10,
         marginTop: 28,
         marginBottom: 28,
-        alignSelf: 'center', 
+        alignSelf: 'center',
         backgroundColor: '#25aae1',
         borderRadius: 60
     },
     profile_image: {
-        width: 100, 
-        height: 100, 
-        borderRadius: 60, 
+        width: 100,
+        height: 100,
+        borderRadius: 60,
     },
 });
